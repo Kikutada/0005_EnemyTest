@@ -9,11 +9,8 @@
 import Foundation
 import UIKit
 
+/// Ghost Blinky class
 class CgGhostBlinky : CgGhost {
-    
-    enum EnGhostAction {
-        case None, Stopping, Walking, Turning, EatingDot, EatingPower, EatingFruit
-    }
 
     override init(binding object: CgSceneFrame, deligateActor: ActorDeligate) {
         super.init(binding: object, deligateActor: deligateActor)
@@ -26,10 +23,9 @@ class CgGhostBlinky : CgGhost {
     //  - Sequence: reset()->start()->update() called->stop()
     // ============================================================
 
-    /// Reset player states and draw at default position
+    /// Reset ghopst states and draw at default position
     override func reset() {
         super.reset()
-
         position.set(column: 13, row: 21, dx: 4)
         direction.set(to: .Left)
         state.set(to: .Stop)
@@ -64,43 +60,218 @@ class CgGhostBlinky : CgGhost {
     //  General methods in this class
     // ============================================================
 
-    //
-    //  プレイフィールド上の右上付近を動き回る
-    //
-    override func toScatter() {
+    /// Set the target position in scatter mode.
+    /// Blinky moves around the upper right in the play field.
+    override func EntryActionToScatter() {
         target.set(column: 25, row: 35)
-        super.toScatter()
+        super.EntryActionToScatter()
     }
 
-    //
-    //  常にパックマンのいるマス(8dotx8dot)を追う
-    //
+    /// Set return destination in nest from Escape mode.
+    override func EntryActionToEscapeInNest() {
+        target.set(column: 13, row: 18, dx: 4, dy: -4)
+    }
+
+    /// Set the tartget position in chase mode.
+    /// Always chase the Pacman during the chase mode.
+    /// - Parameter playerPosition: Player's position
     func setChase(playerPosition: CgPosition) {
         guard !state.isFrightened() else { return }
         self.setChase(targetPosition: playerPosition)
     }
+    
+}
 
-    override func setStartTargetPosition() {
+/// Ghost Pinky class
+class CgGhostPinky : CgGhost {
+    
+    override init(binding object: CgSceneFrame, deligateActor: ActorDeligate) {
+        super.init(binding: object, deligateActor: deligateActor)
+        actor = .Pinky
+        sprite_number = actor.getSpriteNumber()
+    }
+
+    // ============================================================
+    //   Core operation methods for actor
+    //  - Sequence: reset()->start()->update() called->stop()
+    // ============================================================
+
+    /// Reset ghopst states and draw at default position
+    override func reset() {
+        super.reset()
+        position.set(column: 13, row: 18, dx: 4)
+        direction.set(to: .Down)
+        state.set(to: .Standby)
+        draw2()
+    }
+
+    // ============================================================
+    //  General methods in this class
+    // ============================================================
+
+    /// Set the target position in scatter mode.
+    /// Pinky moves around the upper left on the play field.
+    override func EntryActionToScatter() {
+        target.set(column: 2, row: 35)
+        super.EntryActionToScatter()
+    }
+    
+    /// Set return destination in nest from Escape mode.
+    override func EntryActionToEscapeInNest() {
         target.set(column: 13, row: 18, dx: 4, dy: -4)
+    }
+
+    /// Set the tartget position in chase mode.
+    /// Aiming for Pacman's third destination
+    /// - Parameter playerPosition: Player's position
+    func setChase(playerPosition: CgPosition, playerDirection: EnDirection) {
+        guard !state.isFrightened() else { return }
+        let dx = playerDirection.getHorizaontalDelta()*3
+        let dy = playerDirection.getVerticalDelta()*3
+        let newTargetPosition = CgPosition(column: playerPosition.column+dx, row: playerPosition.row+dy)
+        self.setChase(targetPosition: newTargetPosition)
     }
 
 }
 
+/// Ghost Inky class
+class CgGhostInky : CgGhost {
+    
+    override init(binding object: CgSceneFrame, deligateActor: ActorDeligate) {
+        super.init(binding: object, deligateActor: deligateActor)
+        actor = .Inky
+        sprite_number = actor.getSpriteNumber()
+    }
 
-//---------------------------------------------------------------------------
+    // ============================================================
+    //   Core operation methods for actor
+    //  - Sequence: reset()->start()->update() called->stop()
+    // ============================================================
+
+    /// Reset ghopst states and draw at default position
+    override func reset() {
+        super.reset()
+        position.set(column: 11, row: 18, dx: 4)
+        direction.set(to: .Up)
+        state.set(to: .Standby)
+        draw2()
+    }
+
+    // ============================================================
+    //  General methods in this class
+    // ============================================================
+
+    /// Set the target position in scatter mode.
+    /// Inky moves around the lower right on the play field.
+    override func EntryActionToScatter() {
+        target.set(column: 27, row: 0)
+        super.EntryActionToScatter()
+    }
+    
+    /// Set return destination in nest from Escape mode.
+    override func EntryActionToEscapeInNest() {
+        target.set(column: 11, row: 18, dx: 4, dy: -4)
+    }
+
+    /// Set the tartget position in chase mode.
+    /// Aiming for a point-symmetrical mass centered on Blinky and Pacman.
+    /// - Parameter playerPosition: Player's position
+    func setChase(playerPosition: CgPosition, blinkyPosition: CgPosition) {
+        guard !state.isFrightened() else { return }
+        let dx = playerPosition.column - blinkyPosition.column
+        let dy = playerPosition.row - blinkyPosition.row
+        let newTargetPosition = CgPosition(column: playerPosition.column+dx, row: playerPosition.row+dy)
+        self.setChase(targetPosition: newTargetPosition)
+    }
+
+}
+
+/// Ghost Clyde class
+class CgGhostClyde : CgGhost {
+    
+    private var chaseMode = false
+    
+    override init(binding object: CgSceneFrame, deligateActor: ActorDeligate) {
+        super.init(binding: object, deligateActor: deligateActor)
+        actor = .Clyde
+        sprite_number = actor.getSpriteNumber()
+    }
+
+    // ============================================================
+    //   Core operation methods for actor
+    //  - Sequence: reset()->start()->update() called->stop()
+    // ============================================================
+
+    /// Reset ghopst states and draw at default position
+    override func reset() {
+        super.reset()
+        chaseMode = false
+        position.set(column: 15, row: 18, dx: 4)
+        direction.set(to: .Up)
+        state.set(to: .Standby)
+        draw2()
+    }
+
+    // ============================================================
+    //  General methods in this class
+    // ============================================================
+
+    /// Set the target position in scatter mode.
+    /// Clyde moves around the lower left on the play field.
+    override func EntryActionToScatter() {
+        target.set(column: 0, row: 0)
+        super.EntryActionToScatter()
+    }
+
+    /// Set return destination in nest from Escape mode.
+    override func EntryActionToEscapeInNest() {
+        target.set(column: 13+2, row: 18, dx: 4, dy: -4)
+    }
+
+    /// Set the tartget position in chase mode.
+    /// If Clyde is outside the radius of 130 dots from Pacman, it has the character of a Blinky,
+    /// otherwise Clyde moves by random within the radius regardless of Pacman.
+    func setChase(playerPosition: CgPosition) {
+        guard !state.isFrightened() else { return }
+        let dx = playerPosition.x - position.x
+        let dy = playerPosition.y - position.y
+        if (dx*dx+dy*dy) > 130*130 {
+            self.setChase(targetPosition: playerPosition)
+            chaseMode = true
+        } else {
+            chaseMode = false
+        }
+    }
+    
+    /// Clyde switches scatter and random movement in chase mode.
+    override func movingChase() {
+        if chaseMode {
+            movingScatter()
+        } else {
+            movingByRandom()
+        }
+    }
+    
+}
+
+//------------------------------------------------------------
+// Common class for ghosts
+//------------------------------------------------------------
+
+/// State of ghosts class
 class CgGhostState : CbContainer {
 
     enum EnGhostState {
-        case None, Stop, Standby, ReadyToScatter, Scatter, Chase, Frightened, ReturnFromFrightened, Escape, ReturnFromEscape
+        case None, Stop, Standby, Patrol, Scatter, Chase, Frightened,
+             Escape, EscapeInNest
         
         func isFrightenedState() -> Bool {
-            return self == .Frightened || self == .ReturnFromFrightened
+            return self == .Frightened
         }
         
         func isEscapeState() -> Bool {
-            return self == .Escape || self == .ReturnFromEscape
+            return self == .Escape || self == .EscapeInNest
         }
-
     }
 
     private var currentState: EnGhostState = .None
@@ -114,7 +285,6 @@ class CgGhostState : CbContainer {
 
     private var spurtState: Bool = false
     private var updateDarwing: Bool = false
-
     
     override init(binding object: CbObject) {
         super.init(binding: object)
@@ -126,76 +296,6 @@ class CgGhostState : CbContainer {
         if frightenedState {
             updateFrightenedState()
         }
-    }
-
-    
-    func reset() {
-        currentState = .None
-        nextState = .None
-        frightenedState = false
-        frightenedBlinkingState = false
-        frightenedBlinkingOn = false
-        spurtState = false
-        timer_frightenedState?.reset()
-        timer_frightenedStateWhileBlinking?.reset()
-        updateDarwing = false
-    }
-
-    func get() -> EnGhostState {
-        return currentState
-    }
-
-    func getNext() -> EnGhostState {
-        return nextState
-    }
-
-    func set(to state: EnGhostState) {
-        nextState = state
-    }
-    
-    func setSpurt() {
-        spurtState = true
-        updateDarwing = true
-    }
-    
-    func isSpurt() -> Bool {
-        return spurtState
-    }
-
-    func setFrightened(_ on: Bool, interval time: Int = 0) {
-        frightenedState = on
-        frightenedBlinkingState = false
-        updateDarwing = true
-        if on {
-            timer_frightenedState?.set(interval: time)
-            timer_frightenedState?.start()
-        }
-    }
-    
-    func isFinishFrightened() -> Bool {
-        return (timer_frightenedState?.isEventFired())!
-    }
-
-    func pauseFrightened(_ on: Bool) {
-        if on {
-            timer_frightenedState?.pause()
-            timer_frightenedStateWhileBlinking?.pause()
-        } else {
-            timer_frightenedState?.start()
-            timer_frightenedStateWhileBlinking?.start()
-        }
-    }
-
-    func isFrightenedBlinkingState() -> Bool {
-        return frightenedBlinkingState
-    }
-    
-    func isFrightenedBlinkingOn() -> Bool {
-        return (timer_frightenedStateWhileBlinking?.get())! > 10*16
-    }
-
-    func isFrightened() -> Bool {
-        return frightenedState && !isEscape()
     }
 
     private func updateFrightenedState() {
@@ -223,7 +323,29 @@ class CgGhostState : CbContainer {
         }
     }
 
-    func isEscape() -> Bool { return currentState == .Escape || nextState == .Escape || currentState == .ReturnFromEscape || nextState == .ReturnFromEscape }
+    func reset() {
+        currentState = .None
+        nextState = .None
+        frightenedState = false
+        frightenedBlinkingState = false
+        frightenedBlinkingOn = false
+        spurtState = false
+        timer_frightenedState.reset()
+        timer_frightenedStateWhileBlinking.reset()
+        updateDarwing = false
+    }
+
+    func get() -> EnGhostState {
+        return currentState
+    }
+
+    func getNext() -> EnGhostState {
+        return nextState
+    }
+
+    func set(to state: EnGhostState) {
+        nextState = state
+    }
 
     func update() {
         if currentState != nextState {
@@ -236,6 +358,53 @@ class CgGhostState : CbContainer {
         return ( currentState != nextState && nextState != .None)
     }
     
+    func setSpurt() {
+        spurtState = true
+        updateDarwing = true
+    }
+    
+    func isSpurt() -> Bool {
+        return spurtState
+    }
+
+    func setFrightened(_ on: Bool, interval time: Int = 0) {
+        frightenedState = on
+        frightenedBlinkingState = false
+        updateDarwing = true
+        if on {
+            timer_frightenedState.set(interval: time)
+            timer_frightenedState.start()
+        }
+    }
+    
+    func isFinishFrightened() -> Bool {
+        return timer_frightenedState.isEventFired()
+    }
+
+    func pauseFrightened(_ on: Bool) {
+        if on {
+            timer_frightenedState.pause()
+            timer_frightenedStateWhileBlinking.pause()
+        } else {
+            timer_frightenedState.start()
+            timer_frightenedStateWhileBlinking.start()
+        }
+    }
+
+    func isFrightenedBlinkingState() -> Bool {
+        return frightenedBlinkingState
+    }
+    
+    func isFrightenedBlinkingOn() -> Bool {
+        return timer_frightenedStateWhileBlinking.get() > 10*16
+    }
+
+    func isFrightened() -> Bool {
+        return frightenedState && !isEscape()
+    }
+
+    func isEscape() -> Bool { return currentState == .Escape || nextState == .Escape || currentState == .EscapeInNest || nextState == .EscapeInNest }
+
     func isDrawingUpdated() -> Bool {
         return updateDarwing
     }
@@ -245,8 +414,10 @@ class CgGhostState : CbContainer {
     }
 }
 
+/// Based ghost actor class
 class CgGhost : CgActor {
-    enum EnGhostAction: Int {
+
+    enum EnGhostAction {
         case None, Walking, Spurting, Frightened, Warping, Standby, Escaping
     }
 
@@ -257,7 +428,7 @@ class CgGhost : CgActor {
     var target: CgPosition = CgPosition()
     var state: CgGhostState!
 
-    var movementRestriction: EnMovementRestrictions = .None
+    private var movementRestriction: EnMovementRestrictions = .None
 
     override init(binding object: CgSceneFrame, deligateActor: ActorDeligate) {
         super.init(binding: object, deligateActor: deligateActor)
@@ -287,22 +458,28 @@ class CgGhost : CgActor {
     /// - Parameter interval: Interval time(ms) to update
     override func update(interval: Int) {
 
+        //
+        // Action to enter state
+        //
         if state.isChanging() {
             switch state.getNext() {
-                case .Standby: toStandby()
-                case .ReadyToScatter:  toReadyScatter()
-                case .Scatter:  toScatter()
-                case .Chase:  toChase()
-                case .Escape:  toEscape()
-                case .ReturnFromEscape:  toEscapeEnd()
-                default:   toDefault()
+                case .Standby: break
+                case .Patrol: EntryActionToPatrol()
+                case .Scatter: EntryActionToScatter()
+                case .Chase: EntryActionToChase()
+                case .Escape: EntryActionToEscape()
+                case .EscapeInNest: EntryActionToEscapeInNest()
+                default: break
             }
             state.update()
         }
 
+        //
+        // Action in current state
+        //
         switch state.get() {
             case .Standby: movingStandby()
-            case .ReadyToScatter:  movingReadyScatter()
+            case .Patrol:  movingReadyScatter()
             case .Scatter:
                 if state.isFrightened() {
                     movingByRandom()
@@ -316,8 +493,8 @@ class CgGhost : CgActor {
                     movingChase()
                 }
             case .Escape:  movingEscape()
-            case .ReturnFromEscape:  movingEscapeEnd()
-            default: movingByRandom()
+            case .EscapeInNest:  movingEscapeEnd()
+            default: break
         }
 
         if state.isChanging() || direction.isChanging() || state.isDrawingUpdated() {
@@ -347,6 +524,58 @@ class CgGhost : CgActor {
         return result
     }
 
+    func setSpeed(direction: EnDirection, oneWayProhibition: Bool = true) {
+        let road = deligateActor.getTileAttribute(to: direction, column: position.column,row: position.row)
+        let _oneWayProhibition = oneWayProhibition && (road == .Oneway && direction == .Up)
+
+        if (road == .Wall) /*|| (road == .Gate)*/ || _oneWayProhibition {
+            //
+        } else {
+            // true
+            if state.isFrightened() && !(state.get() == .Patrol) {
+                setSpeed(speed: deligateActor.getGhostSpeed(action: .Frightened) )
+            } else {
+                if (road == .Slow) {
+                    setSpeed(speed: deligateActor.getGhostSpeed(action: .Warping) )
+                } else {
+                    if state.isSpurt() {
+                        setSpeed(speed: deligateActor.getGhostSpeed(action: .Spurting) )
+                    } else {
+                        setSpeed(speed: deligateActor.getGhostSpeed(action: .Walking) )
+                    }
+                }
+            }
+        }
+    }
+
+    func canMove(direction: EnDirection, oneWayProhibition: Bool = true) -> Bool {
+        var can = true
+        if position.canMove(direction: direction) {
+            let road = deligateActor.getTileAttribute(to: direction, column: position.column,row: position.row)
+            
+            if (road == .Wall) {
+                can = false
+            } else if oneWayProhibition && (road == .Oneway && direction == .Up) {
+                can = false
+            }
+        } else {
+            can = false
+        }
+        return can
+    }
+
+    func move(direction: EnDirection, speed: Int) {
+        if direction != .Stop {
+            position.move2(to: direction, speed: speed )
+        }
+    }
+
+    func move(direction: EnDirection) {
+        if direction != .Stop {
+            position.move2(to: direction, speed: calculateSpeed() )
+        }
+    }
+
     func getTargetDirection() -> EnDirection {
         var direction: EnDirection
 
@@ -365,66 +594,7 @@ class CgGhost : CgActor {
         
         return direction
     }
-
     
-    func canMove(direction: EnDirection, oneWayProhibition: Bool = true) -> Bool {
-        var can = true
-        if position.canMove(direction: direction) {
-            let road = deligateActor.getTileAttribute(to: direction, column: position.column,row: position.row)
-            
-            if (road == .Wall) {
-                can = false
-            } else if oneWayProhibition && (road == .Oneway && direction == .Up) {
-                can = false
-            }
-        } else {
-            can = false
-        }
-        return can
-    }
-
-    
-    func setStartTargetPosition() {
-        // pure virtual
-    }
-
-    func setSpeed(direction: EnDirection, oneWayProhibition: Bool = true) {
-        let road = deligateActor.getTileAttribute(to: direction, column: position.column,row: position.row)
-        let _oneWayProhibition = oneWayProhibition && (road == .Oneway && direction == .Up)
-
-        if (road == .Wall) /*|| (road == .Gate)*/ || _oneWayProhibition {
-            //
-        } else {
-            // true
-            if state.isFrightened() && !(state.get() == .ReadyToScatter) {
-                setSpeed(speed: deligateActor.getGhostSpeed(action: .Frightened) )
-            } else {
-                if (road == .Slow) {
-                    setSpeed(speed: deligateActor.getGhostSpeed(action: .Warping) )
-                } else {
-                    if state.isSpurt() {
-                        setSpeed(speed: deligateActor.getGhostSpeed(action: .Spurting) )
-                    } else {
-                        setSpeed(speed: deligateActor.getGhostSpeed(action: .Walking) )
-                    }
-                }
-            }
-        }
-    }
-
-
-    func move(direction: EnDirection, speed: Int) {
-        if direction != .Stop {
-            position.move2(to: direction, speed: speed )
-        }
-    }
-
-    func move(direction: EnDirection) {
-        if direction != .Stop {
-            position.move2(to: direction, speed: calculateSpeed() )
-        }
-    }
-
     func getTargetHorizontalDirection() -> EnDirection {
         var walk: EnDirection = .Stop
         let dx_t = (position.column - target.column)*8 + (position.dx - target.dx)
@@ -456,6 +626,11 @@ class CgGhost : CgActor {
         return deltaColumn * deltaColumn + deltaRow * deltaRow
     }
     
+    /// Ghost decides the next direction to chase target position.
+    /// - Parameters:
+    ///   - oneWayProhibition: True prohibits that ghost move through one way.
+    ///   - forcedDirectionChange: True changes the direction the ghost is moving
+    /// - Returns: Next direction to move
     func decideDirectionByTarget(oneWayProhibition: Bool, forcedDirectionChange: Bool = false) -> EnDirection {
         let currentDirection = direction.get()
         var nextDirection: EnDirection  = .None
@@ -463,6 +638,7 @@ class CgGhost : CgActor {
         if position.isCenter() || forcedDirectionChange {
             let allDirections: [EnDirection] = [.Up, .Down, .Left, .Right]
             var minDistance = MAZE_MAX_DISTANCE
+
             for _direction in allDirections {
                 if _direction != currentDirection.getReverse() || forcedDirectionChange {
                     if canMove(direction: _direction, oneWayProhibition: oneWayProhibition) {
@@ -486,15 +662,9 @@ class CgGhost : CgActor {
     }
 
     // ============================================================
-    //  Draw and clear sprite methods.
+    //  Entry action to enter each state.
     // ============================================================
-
-    func toStandby() {
-        setSpeed(speed: deligateActor.getGhostSpeed(action: .Standby) )
-    }
-
-    func toReadyScatter() {
-        setSpeed(speed: deligateActor.getGhostSpeed(action: .Standby) )
+    func EntryActionToPatrol() {
         target.set(column: 13, row: 21, dx: 4)
         if position.movingVertical() && movementRestriction == .None {
             movementRestriction = .OnlyVertical
@@ -503,47 +673,47 @@ class CgGhost : CgActor {
         }
     }
 
-    func toScatter() {
+    func EntryActionToScatter() {
         switch state.get() {
             case .None:
                 break
             case .Chase:
-                self.direction.set(to: self.direction.get().getReverse())
-                self.direction.update()
-            case .ReadyToScatter:
+                direction.set(to: direction.get().getReverse())
+                direction.update()
+            case .Patrol:
                 var _direction = getTargetHorizontalDirection()
                 if _direction == .Stop { _direction = .Left }
                 direction.set(to: _direction)
-            default: break
+            default:
+                break
         }
     }
 
-    func toChase() {
+    func EntryActionToChase() {
         switch state.get() {
             case .Scatter:
                 self.direction.set(to: self.direction.get().getReverse())
                 self.direction.update()
-            default: break
+            default:
+                break
         }
     }
 
-    func toEscape() {
-        sprite.stopAnimation(sprite_number)
+    func EntryActionToEscape() {
         target.set(column: 13, row: 21, dx: 4)
+        sprite.stopAnimation(sprite_number)
     }
 
-    func toEscapeEnd() {
-        setStartTargetPosition()
+    func EntryActionToEscapeInNest() {
+        // pure virtual
     }
 
-    func toDefault() {
-        //
-    }
-    
     // ============================================================
-    //  Draw and clear sprite methods.
+    //  Do action in state.
     // ============================================================
     func movingStandby() {
+        setSpeed(speed: deligateActor.getGhostSpeed(action: .Standby) )
+
         if direction.get() == .Up {
             if !position.checkHalfDyUp() {
                 self.move(direction: direction.get())
@@ -561,9 +731,9 @@ class CgGhost : CgActor {
         }
     }
 
-
     func movingReadyScatter() {
-
+        setSpeed(speed: deligateActor.getGhostSpeed(action: .Standby) )
+        
         // 縦方向だけ移動し、真ん中にくるまで待つ
         if movementRestriction == .OnlyVertical {
             movingStandby()
@@ -615,7 +785,7 @@ class CgGhost : CgActor {
         } else {
             movementRestriction = .OnlyHorizontal
             state.setFrightened(false)  // delete & hit
-            state.set(to: .ReadyToScatter)
+            state.set(to: .Patrol)
         }
     }
     
@@ -645,7 +815,7 @@ class CgGhost : CgActor {
     //
     func movingEscape() {
         if getTargetDirection() == .Stop {
-            state.set(to: .ReturnFromEscape)
+            state.set(to: .EscapeInNest)
         } else {
             let nextDirection = decideDirectionByTarget(oneWayProhibition: false)
             direction.set(to: nextDirection)
@@ -775,7 +945,7 @@ class CgGhost : CgActor {
         let spriteNumber = targetActor.getSpriteNumber()
 
         switch state.get() {
-            case .ReadyToScatter: fallthrough
+            case .Patrol: fallthrough
             case .Scatter: fallthrough
             case .Escape: fallthrough
             case .Chase:

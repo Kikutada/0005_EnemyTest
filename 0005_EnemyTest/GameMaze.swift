@@ -73,11 +73,17 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
 
     var player : CgPlayer!
     var blinky : CgGhostBlinky!
+    var pinky  : CgGhostPinky!
+    var inky   : CgGhostInky!
+    var clyde  : CgGhostClyde!
 
     convenience init(object: CgSceneFrame) {
         self.init(binding: object, context: object.context, sprite: object.sprite, background: object.background, sound: object.sound)
         player = CgPlayer(binding: self, deligateActor: self)
         blinky = CgGhostBlinky(binding: self, deligateActor: self)
+        pinky  = CgGhostPinky(binding: self, deligateActor: self)
+        inky   = CgGhostInky(binding: self, deligateActor: self)
+        clyde  = CgGhostClyde(binding: self, deligateActor: self)
     }
 
     /// Handle sequence
@@ -99,6 +105,12 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
                 
                 blinky.reset()
                 blinky.start()
+                pinky.reset()
+                pinky.start()
+                inky.reset()
+                inky.start()
+                clyde.reset()
+                clyde.start()
 
                 goToNextSequence()
             
@@ -123,7 +135,10 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
                 
                 // For debug
                 blinky.drawTargetPosition()
-                
+                pinky.drawTargetPosition()
+                inky.drawTargetPosition()
+                clyde.drawTargetPosition()
+
                 break
 
             //

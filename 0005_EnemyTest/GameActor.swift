@@ -160,6 +160,10 @@ class CgPosition {
     init() {
         self.set(column: 0, row: 0)
     }
+    
+    init(column: Int, row: Int) {
+        self.set(column: column, row: row)
+    }
 
     func set(column: Int, row: Int, dx: Int = 0, dy: Int = 0) {
         self.column = column
