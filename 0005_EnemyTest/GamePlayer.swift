@@ -166,9 +166,7 @@ class CgPlayer : CgActor {
     /// - Returns: True if player can move
     func canMove(to nextDirection: EnDirection) -> Bool {
         if position.canMove(to: nextDirection) {
-            let targetColumn = position.column + nextDirection.getHorizaontalDelta()
-            let targetRow = position.row + nextDirection.getVerticalDelta()
-            let value: EnMazeTile = deligateActor.getTile(column: targetColumn, row: targetRow)
+            let value: EnMazeTile = deligateActor.getTileAttribute(to: nextDirection, position: position)
             return canMove(through: value)
         }
         return false
@@ -230,15 +228,15 @@ class CgPlayer : CgActor {
         }
     }
 
-    /// <#Description#>
-    /// - Parameter ghostPosition: <#ghostPosition description#>
-    /// - Returns: <#description#>
-    func checkHit(ghostPosition: CgPosition) -> Bool {
-        var hit: Bool = false
+    /// Collision detection
+    /// - Parameter ghostPosition: Ghost's position
+    /// - Returns: If true, ghost and player have collided.
+    func DetectCollision(ghostPosition: CgPosition) -> Bool {
+        var collision: Bool = false
         if (abs(ghostPosition.x-position.x) < 5) && (abs(ghostPosition.y-position.y) < 5) {
-            hit = true
+            collision = true
         }
-        return hit
+        return collision
     }
 
     /// Draw and animate  player in the direction

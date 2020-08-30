@@ -59,13 +59,10 @@ protocol ActorDeligate {
     func getPlayerSpeed(action: CgPlayer.EnPlayerAction, with power: Bool) -> Int
     func getTimeOfPlayerWithPower() -> Int
     func getTimeOfPlayerNotToEat() -> Int
-
-    func getGhostSpeed(action: CgGhost.EnGhostAction, spurt: Bool) -> Int
-    func isGhostSpurt() -> Bool
-    
+    func getGhostSpeed(action: CgGhost.EnGhostAction) -> Int
     func setTile(column: Int, row: Int, value: EnMazeTile)
     func getTile(column: Int, row: Int) -> EnMazeTile
-    func getTileAttribute(to direction: EnDirection, column: Int, row: Int) -> EnMazeTile
+    func getTileAttribute(to direction: EnDirection, position: CgPosition) -> EnMazeTile
 }
 
 /// Maze scene class for play mode
@@ -77,6 +74,7 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
     var pinky  : CgGhostPinky!
     var inky   : CgGhostInky!
     var clyde  : CgGhostClyde!
+    var allGhosts : [CgGhost] = []
 
     convenience init(object: CgSceneFrame) {
         self.init(binding: object, context: object.context, sprite: object.sprite, background: object.background, sound: object.sound)
@@ -85,6 +83,12 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
         pinky  = CgGhostPinky(binding: self, deligateActor: self)
         inky   = CgGhostInky(binding: self, deligateActor: self)
         clyde  = CgGhostClyde(binding: self, deligateActor: self)
+        
+        allGhosts.append(blinky)
+        allGhosts.append(pinky)
+        allGhosts.append(inky)
+        allGhosts.append(clyde)
+
     }
 
     /// Handle sequence
@@ -103,7 +107,12 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
 
                 player.reset()
                 player.start()
-                
+
+                for ghost in allGhosts {
+                    ghost.reset()
+                    ghost.start()
+                }
+/*
                 blinky.reset()
                 blinky.start()
                 pinky.reset()
@@ -112,7 +121,7 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
                 inky.start()
                 clyde.reset()
                 clyde.start()
-
+*/
                 goToNextSequence()
             
             case  1:
@@ -120,28 +129,35 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
                 // Foever loop
                 // ===========
                 
-                // Player checks to hit ghost.
-                if player.checkHit(ghostPosition: blinky.position) {
-                    if blinky.state.isFrightened()  {
-                        blinky.setStateToEscape()
+                // Player checks to collide ghost.
+                for ghost in allGhosts {
+                    if player.DetectCollision(ghostPosition: ghost.position) {
+                        if ghost.state.isFrightened()  {
+                            ghost.setStateToEscape()
+                        }
                     }
                 }
-                
+
                 // Change blinky state.
                 if player.timer_playerNotToEat.isEventFired()  {
                     blinky.chase(playerPosition: player.position)
+                    pinky.chase(playerPosition: player.position, playerDirection: player.direction.get())
+                    inky.chase(playerPosition: player.position, blinkyPosition: blinky.position)
+                    clyde.chase(playerPosition: player.position)
                 } else {
-                    blinky.setStateToScatter()
-                    clyde.setStateToGoOut()
-                    pinky.setStateToGoOut()
+                    for ghost in allGhosts {
+                        ghost.setStateToScatter()
+                    }
+
+                    for ghost in allGhosts {
+                        ghost.setStateToGoOut()
+                    }
                 }
                 
                 // For debug
-                blinky.drawTargetPosition()
-                pinky.drawTargetPosition()
-                inky.drawTargetPosition()
-                clyde.drawTargetPosition()
-
+                for ghost in allGhosts {
+                    ghost.drawTargetPosition()
+                }
                 break
 
             //
@@ -189,7 +205,9 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
         setTile(column: column,row: row, value: .Road)
 
         if power {
-            blinky.setStateToFrightened(time: getTimeOfPlayerWithPower())
+            for ghost in allGhosts {
+                ghost.setStateToFrightened(time: getTimeOfPlayerWithPower())
+            }
             addScore(pts: 50)
         } else {
             sound.playSE(.EatDot)
@@ -226,7 +244,7 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
         return speed
     }
 
-    func getGhostSpeed(action: CgGhost.EnGhostAction, spurt: Bool) -> Int {
+    func getGhostSpeed(action: CgGhost.EnGhostAction) -> Int {
         let speed: Int
         switch action {
             case .Walking: speed = 15
@@ -240,25 +258,6 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
         return speed
     }
 
-    
-    func isGhostSpurt() -> Bool {
-/*
-        let dotRemain: Int = context.numberOfDots - context.numberOfDotEated
-        var monstersInNest: Bool = false
-        for ghost in allGhosts {
-            if ghost.state.get() == .Standby {
-                monstersInNest = true
-                break
-            }
-        }
-        return (dotRemain <= context.numberOfDotsRemaingToSpurt) && !monstersInNest
-*/
-        return false
-    }
-
-
-    
-    
     func setTile(column: Int, row: Int, value: EnMazeTile) {
         mazeValues[column][row] = value
     }
@@ -272,7 +271,23 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
         return mazeValues[column][row]
     }
 
-    func getTileAttribute(column: Int, row: Int) -> EnMazeTile {
+    func getTileAttribute(to direction: EnDirection, position: CgPosition) -> EnMazeTile {
+        let column = position.column
+        let row = position.row
+        switch direction {
+            case .Left where position.dx <= 0 : return getTileAttribute(column: column-1, row: row)
+            case .Left where position.dx > 0 : return getTileAttribute(column: column, row: row)
+            case .Right where position.dx < 0 : return getTileAttribute(column: column, row: row)
+            case .Right where position.dx >= 0 : return getTileAttribute(column: column+1, row: row)
+            case .Up where position.dy < 0 : return getTileAttribute(column: column, row: row)
+            case .Up where position.dy >= 0 : return getTileAttribute(column: column, row: row+1)
+            case .Down where position.dy <= 0 : return getTileAttribute(column: column, row: row-1)
+            case .Down where position.dy > 0 : return getTileAttribute(column: column, row: row)
+            default    : return getTileAttribute(column: column  , row: row)
+        }
+    }
+
+    private func getTileAttribute(column: Int, row: Int) -> EnMazeTile {
         if column < 0 {
             return mazeAttributes[BG_WIDTH-1][row]
         } else if column >= BG_WIDTH {
@@ -281,15 +296,6 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
         return mazeAttributes[column][row]
     }
 
-    func getTileAttribute(to direction: EnDirection, column: Int, row: Int) -> EnMazeTile {
-        switch direction {
-            case .Left : return getTileAttribute(column: column-1, row: row)
-            case .Right: return getTileAttribute(column: column+1, row: row)
-            case .Up   : return getTileAttribute(column: column  , row: row+1)
-            case .Down : return getTileAttribute(column: column  , row: row-1)
-            default    : return getTileAttribute(column: column  , row: row)
-        }
-    }
 
     func addScore(pts: Int) {
         context.score += pts
@@ -490,7 +496,7 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
             "     e1EF          EF1f     ",
             "     e1EF QhUWWVhR EF1f     ",
             "gggggD1CD f      e CD1Cggggg",
-            "__    1   f      e   1    __" ,
+            "___   1   f      e   1   ___" ,
             "hhhhhB1AB f      e AB1Ahhhhh",
             "     e1EF SggggggT EF1f     ",
             "     e1EF          EF1f     ",

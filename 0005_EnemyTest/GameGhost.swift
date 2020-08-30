@@ -241,7 +241,8 @@ class CgGhostClyde : CgGhost {
         if chaseMode {
             doActionInScatter()
         } else {
-            doActionInFrightened()
+            let speed = getGhostSpeed(action: .Walking)
+            move(targetSelected: false, speed: speed, oneWayProhibition: true)
         }
     }
     
@@ -492,6 +493,7 @@ class CgGhost : CgActor {
         //  Update direction and sprite animation for changes.
         if state.isChanging() || direction.isChanging() || state.isDrawingUpdated() {
             direction.update()
+            position.roundDown(to: .Stop)
             draw()
             state.clearDrawingUpdate()
         }
@@ -616,25 +618,8 @@ class CgGhost : CgActor {
     }
     
     func doActionInScatter() {
-        var speed = getGhostSpeed(action: .Walking)
-        var nextDirection = direction.get()
-
-        if position.amountMoved > 0 {
-            nextDirection = decideDirectionByTarget(oneWayProhibition: true)
-            direction.set(to: nextDirection)
-            if direction.isChanging() {
-                position.amountMoved = 0
-            }
-        }
-        
-        while(speed > 0) {
-            if canMove(direction: nextDirection, oneWayProhibition: true) {
-                speed = position.move(to: nextDirection, speed: speed)
-            } else {
-                position.roundDown(to: .Stop)
-                break
-            }
-        }
+        let speed = getGhostSpeed(action: .Walking)
+        move(targetSelected: true, speed: speed, oneWayProhibition: true)
     }
 
     func doActionInChase() {
@@ -645,45 +630,14 @@ class CgGhost : CgActor {
         if getTargetDirection() == .Stop {
             state.set(to: .EscapeInNest)
         } else {
-
-            var speed = getGhostSpeed(action: .Escaping)
-            var nextDirection = direction.get()
-
-            if position.amountMoved > 0 {
-                nextDirection = decideDirectionByTarget(oneWayProhibition: false)
-                direction.set(to: nextDirection)
-                if direction.isChanging() {
-                    position.amountMoved = 0
-                }
-            }
-            
-            while(speed > 0) {
-                if canMove(direction: nextDirection, oneWayProhibition: false) {
-                    speed = position.move(to: nextDirection, speed: speed)
-                } else {
-                    position.roundDown(to: .Stop)
-                    break
-                }
-            }
-
+            let speed = getGhostSpeed(action: .Escaping)
+            move(targetSelected: true, speed: speed, oneWayProhibition: false)
         }
     }
     
     func doActionInFrightened() {
-        var speed = getGhostSpeed(action: .Frightened)
-        var nextDirection = direction.getNext()
-
-        while(speed > 0) {
-            if canMove(direction: nextDirection, oneWayProhibition: true) {
-                speed = position.move(to: nextDirection, speed: speed)
-            } else {
-                nextDirection = decideDirectionByRandom()
-                direction.set(to: nextDirection)
-                position.roundDown(to: .Stop)
-                break
-            }
-        }
-
+        let speed = getGhostSpeed(action: .Frightened)
+        move(targetSelected: false, speed: speed, oneWayProhibition: false)
     }
 
     // ============================================================
@@ -711,7 +665,7 @@ class CgGhost : CgActor {
     func setStateToFrightened(time: Int) {
         if !state.isEscape() {
             state.setFrightened(true, interval: time)
-            direction.set(to: direction.get().getReverse())
+            updateDirection(to: direction.get().getReverse())
             draw()
         } else {
             // While ghost is escaping to the nest, it doesn't change if eating more power food.
@@ -726,7 +680,22 @@ class CgGhost : CgActor {
     //  General methods
     // ============================================================
     func getGhostSpeed(action: EnGhostAction) -> Int {
-        return deligateActor.getGhostSpeed(action: action, spurt: state.isSpurt())
+        var _action: EnGhostAction = action
+
+        switch action {
+            case .Walking:
+                let road = deligateActor.getTileAttribute(to: .Stop, position: position)
+                if road == .Slow {
+                    _action = .Warping
+                } else if state.isSpurt() {
+                    _action = .Spurting
+                }
+            default:
+                // Frightened, Standby, GoingOut, Escaping
+                break
+        }
+        
+        return deligateActor.getGhostSpeed(action: _action)
     }
 
     func updateDirection(to nextDirection: EnDirection) {
@@ -741,7 +710,7 @@ class CgGhost : CgActor {
     func canMove(direction: EnDirection, oneWayProhibition: Bool = true) -> Bool {
         var can = true
         if position.canMove(direction: direction) {
-            let road = deligateActor.getTileAttribute(to: direction, column: position.column,row: position.row)
+            let road = deligateActor.getTileAttribute(to: direction, position: position)
             
             if (road == .Wall) {
                 can = false
@@ -790,13 +759,44 @@ class CgGhost : CgActor {
         
         return direction
     }
+    
+    /// Ghost moves to target position or random position by speed amount.
+    /// - Parameters:
+    ///   - targetSelected: True is that ghost moves to target position. False is that ghost moves by random
+    ///   - speed: Speed amount
+    ///   - oneWayProhibition: True prohibits that ghost move through one way.
+    func move(targetSelected: Bool, speed: Int, oneWayProhibition: Bool) {
+        var _speed = speed
+        var nextDirection = direction.get()
 
+        if position.amountMoved > 0 {
+            if targetSelected {
+                nextDirection = decideDirectionByTarget(oneWayProhibition: oneWayProhibition)
+            } else {
+                nextDirection = decideDirectionByRandom(oneWayProhibition: oneWayProhibition)
+            }
+            direction.set(to: nextDirection)
+            if direction.isChanging() {
+                position.amountMoved = 0
+            }
+        }
+        
+        while(_speed > 0) {
+            if canMove(direction: nextDirection, oneWayProhibition: oneWayProhibition) {
+                _speed = position.move(to: nextDirection, speed: _speed)
+            } else {
+                position.roundDown(to: .Stop)
+                break
+            }
+        }
+    }
+    
     /// Ghost decides the next direction to chase target position.
     /// - Parameters:
     ///   - oneWayProhibition: True prohibits that ghost move through one way.
     ///   - forcedDirectionChange: True changes the direction the ghost is moving
     /// - Returns: Next direction to move
-    func decideDirectionByTarget(oneWayProhibition: Bool, forcedDirectionChange: Bool = false) -> EnDirection {
+    private func decideDirectionByTarget(oneWayProhibition: Bool, forcedDirectionChange: Bool = false) -> EnDirection {
         let currentDirection = direction.get()
         var nextDirection: EnDirection  = .None
 
@@ -807,7 +807,9 @@ class CgGhost : CgActor {
             for _direction in allDirections {
                 if _direction != currentDirection.getReverse() || forcedDirectionChange {
                     if canMove(direction: _direction, oneWayProhibition: oneWayProhibition) {
-                        let distance = getDistanceToTargetPosition(direction: _direction)
+                        let deltaColumn = position.column + _direction.getHorizaontalDelta() - target.column
+                        let deltaRow = position.row + _direction.getVerticalDelta() - target.row
+                        let distance = deltaColumn * deltaColumn + deltaRow * deltaRow
                         if distance < minDistance {
                             minDistance = distance
                             nextDirection = _direction
@@ -826,22 +828,29 @@ class CgGhost : CgActor {
         return nextDirection
     }
 
-    private func getDistanceToTargetPosition(direction: EnDirection) -> Int {
-        let deltaColumn = position.column + direction.getHorizaontalDelta() - target.column
-        let deltaRow = position.row + direction.getVerticalDelta() - target.row
+    /// Ghost decides the next direction by random.
+    /// - Parameters:
+    ///   - oneWayProhibition: True prohibits that ghost move through one way.
+    ///   - forcedDirectionChange: True changes the direction the ghost is moving
+    /// - Returns: Next direction to move
+    private func decideDirectionByRandom(oneWayProhibition: Bool, forcedDirectionChange: Bool = false) -> EnDirection {
+        let currentDirection = direction.get()
+        var nextDirection = currentDirection
 
-        return deltaColumn * deltaColumn + deltaRow * deltaRow
-    }
-    
-    func decideDirectionByRandom() -> EnDirection {
-        var nextDirection = direction.get().getRandom()
+        if position.isCenter() || forcedDirectionChange {
+            nextDirection = direction.get().getRandom()
 
-        for _ in 1 ..< 3 {
-            while !canMove(direction: nextDirection) {
-                nextDirection = nextDirection.getClockwise()
+            for _ in 1 ..< 3 {
+                repeat {
+                    nextDirection = nextDirection.getClockwise()
+                } while !canMove(direction: nextDirection, oneWayProhibition: oneWayProhibition)
+
+                if nextDirection != currentDirection.getReverse() {
+                    break
+                }
             }
-            if nextDirection != direction.get().getReverse() { break }
         }
+           
         return nextDirection
     }
 

@@ -20,66 +20,66 @@ enum EnDirection: Int {
 
     func getHorizaontalDelta() -> Int {
         switch self {
-        case .None:     return 0
-        case .Stop:     return 0
-        case .Up:       return 0
-        case .Down:     return 0
-        case .Left:     return -1
-        case .Right:    return +1
+            case .None:     return 0
+            case .Stop:     return 0
+            case .Up:       return 0
+            case .Down:     return 0
+            case .Left:     return -1
+            case .Right:    return +1
         }
     }
     
     func getVerticalDelta() -> Int {
         switch self {
-        case .None:     return 0
-        case .Stop:     return 0
-        case .Up:       return +1
-        case .Down:     return -1
-        case .Left:     return 0
-        case .Right:    return 0
+            case .None:     return 0
+            case .Stop:     return 0
+            case .Up:       return +1
+            case .Down:     return -1
+            case .Left:     return 0
+            case .Right:    return 0
         }
     }
     
     func getReverse() -> EnDirection {
         switch self {
-        case .None:     return .None
-        case .Stop:     return .Stop
-        case .Up:       return .Down
-        case .Down:     return .Up
-        case .Left:     return .Right
-        case .Right:    return .Left
+            case .None:     return .None
+            case .Stop:     return .Stop
+            case .Up:       return .Down
+            case .Down:     return .Up
+            case .Left:     return .Right
+            case .Right:    return .Left
         }
     }
     
     func getRandom() -> EnDirection {
         switch Int.random(in: 1..<5) {
-        case 1: return .Up
-        case 2: return .Down
-        case 3: return .Left
-        case 4: return .Right
-        default: return .Stop
+            case 1: return .Up
+            case 2: return .Down
+            case 3: return .Left
+            case 4: return .Right
+            default: return .Stop
         }
     }
     
     func getClockwise() -> EnDirection {
         switch self {
-        case .None:     return .None
-        case .Stop:     return .Stop
-        case .Up:       return .Right
-        case .Down:     return .Left
-        case .Left:     return .Up
-        case .Right:    return .Down
+            case .None:     return .None
+            case .Stop:     return .Stop
+            case .Up:       return .Right
+            case .Down:     return .Left
+            case .Left:     return .Up
+            case .Right:    return .Down
         }
     }
     
     func getCounterClockwise() -> EnDirection {
         switch self {
-        case .None:     return .None
-        case .Stop:     return .Stop
-        case .Up:       return .Left
-        case .Down:     return .Right
-        case .Left:     return .Down
-        case .Right:    return .Up
+            case .None:     return .None
+            case .Stop:     return .Stop
+            case .Up:       return .Left
+            case .Down:     return .Right
+            case .Left:     return .Down
+            case .Right:    return .Up
         }
     }
 }
@@ -104,12 +104,7 @@ class CgDirection {
     }
 
     func set(to direction: EnDirection) {
-        if currentDirection == .Stop {
-            currentDirection = direction
-            nextDirection = .Stop
-        } else {
-            nextDirection = direction
-        }
+        nextDirection = direction
     }
     
     func update() {
