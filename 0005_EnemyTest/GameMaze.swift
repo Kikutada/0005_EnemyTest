@@ -10,6 +10,7 @@ import Foundation
 
 let MAZE_MAX_DISTANCE: Int  = 36*36+44*44
 let MAZE_UNIT: Int = 8
+let HALF_MAZE_UNIT: Int = MAZE_UNIT/2
 
 /// Kind of tile int the maze
 enum EnMazeTile: Int {
@@ -59,7 +60,7 @@ protocol ActorDeligate {
     func getTimeOfPlayerWithPower() -> Int
     func getTimeOfPlayerNotToEat() -> Int
 
-    func getGhostSpeed(action: CgGhost.EnGhostAction) -> Int
+    func getGhostSpeed(action: CgGhost.EnGhostAction, spurt: Bool) -> Int
     func isGhostSpurt() -> Bool
     
     func setTile(column: Int, row: Int, value: EnMazeTile)
@@ -122,15 +123,17 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
                 // Player checks to hit ghost.
                 if player.checkHit(ghostPosition: blinky.position) {
                     if blinky.state.isFrightened()  {
-                        blinky.setEscape()
+                        blinky.setStateToEscape()
                     }
                 }
                 
                 // Change blinky state.
                 if player.timer_playerNotToEat.isEventFired()  {
-                    blinky.setChase(playerPosition: player.position)
+                    blinky.chase(playerPosition: player.position)
                 } else {
-                    blinky.setScatter()
+                    blinky.setStateToScatter()
+                    clyde.setStateToGoOut()
+                    pinky.setStateToGoOut()
                 }
                 
                 // For debug
@@ -186,7 +189,7 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
         setTile(column: column,row: row, value: .Road)
 
         if power {
-            blinky.setFrightened(time: getTimeOfPlayerWithPower())
+            blinky.setStateToFrightened(time: getTimeOfPlayerWithPower())
             addScore(pts: 50)
         } else {
             sound.playSE(.EatDot)
@@ -223,7 +226,7 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
         return speed
     }
 
-    func getGhostSpeed(action: CgGhost.EnGhostAction) -> Int {
+    func getGhostSpeed(action: CgGhost.EnGhostAction, spurt: Bool) -> Int {
         let speed: Int
         switch action {
             case .Walking: speed = 15

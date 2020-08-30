@@ -135,6 +135,9 @@ class CgPosition {
     var dx:  Int = 0, dy: Int = 0
     var dxf: Int = 0, dyf: Int = 0
     
+    var amountMoved: Int = 0
+
+    
     var x: CGFloat {
         get {
             return CGFloat(column * MAZE_UNIT + dx - CG_X_ORIGIN)
@@ -172,6 +175,7 @@ class CgPosition {
         self.dy = dy
         self.dxf = 0
         self.dyf = 0
+        self.amountMoved = 0
     }
 
     func canMove(to direction: EnDirection)->Bool {
@@ -197,6 +201,8 @@ class CgPosition {
             case .Left:  dxf = 0
             case .Up:    dyf = 0
             case .Down:  dyf = 0
+            case .Stop:  dxf = 0
+                         dyf = 0
             default:     break
         }
     }
@@ -225,24 +231,28 @@ class CgPosition {
                 if dxf <= -SPEED_UNIT {
                     dxf += SPEED_UNIT
                     decrementHorizontal()
+                    amountMoved += 1
             }
             case .Right:
                 dxf += amountOfMovement
                 if dxf >= SPEED_UNIT {
                     dxf -= SPEED_UNIT
                     incrementHorizontal()
+                    amountMoved += 1
                 }
             case .Down:
                 dyf -= amountOfMovement
                 if dyf <= -SPEED_UNIT {
                     dyf += SPEED_UNIT
                     decrementVertical()
+                    amountMoved += 1
                 }
             case .Up:
                 dyf += amountOfMovement
                 if dyf >= SPEED_UNIT {
                     dyf -= SPEED_UNIT
                     incrementVertical()
+                    amountMoved += 1
                 }
 
             case .Stop: fallthrough
@@ -298,74 +308,8 @@ class CgPosition {
         }
     }
 
-    
-    //
-    //  Ghost
-    //
-    func move2(to direction: EnDirection, speed: Int) {
-
-        switch direction {
-            case .Left:
-                dx -= speed
-                if dx <= -8 {
-                    column -= 1
-                    dx = 0
-                    if column < 0 {  // warp tunnel
-                        column = BG_WIDTH-1
-                    }
-                }
-            case .Right:
-                dx += speed
-                if dx >= 8 {
-                    column += 1
-                    dx = 0
-                    if column >= BG_WIDTH {  // warp tunnel
-                        column = 0
-                    }
-                }
-            case .Down:
-                dy -= speed
-                if dy <= -8 {
-                    row -= 1
-                    dy = 0
-                }
-            case .Up:
-                dy += speed
-                if dy >= 8 {
-                    row += 1
-                    dy = 0
-                }
-            default:
-                return
-        }
-    }
-
     func isCenter()->Bool {
         return (dx == 0) && (dy == 0)
-    }
-
-    func movingHorizontal()->Bool {
-        return (dx != 0)
-    }
-    
-    func movingVertical()->Bool {
-        return (dy != 0)
-    }
-
-    func checkHalfDyUp()-> Bool {
-        if dy >= 4 {
-            return true
-        } else {
-            return false
-        }
-    }
-
-    func checkHalfDyDown()-> Bool {
-        if dy <= -4 {
-            return true
-        } else {
-            return false
-        }
     }
 
     func canMove(direction: EnDirection)->Bool {
@@ -443,8 +387,6 @@ class CgActor: CbContainer {
     var actor: EnActor = .None
     var sprite_number: Int = 0
     
-    let speedUnit: Int = 16
-
     init(binding object: CgSceneFrame, deligateActor: ActorDeligate) {
         super.init(binding: object)
         self.sprite = object.sprite
