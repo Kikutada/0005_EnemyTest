@@ -39,12 +39,12 @@ enum EnMazeTile: Int {
 
     func getTexture() -> Int {
         switch self {
-            case .Road: return 464
+            case .Road: return 464 // blank
             case .Feed: return 593
             case .PowerFeed: return 595
             case .Fruit: return 0
-            case .Slow: return 464
-            case .Oneway: return 464
+            case .Slow: return 464 // blank
+            case .Oneway: return 464 // blank
             case .Gate: return 0
             case .Wall: return 0
         }
@@ -112,16 +112,16 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
                     ghost.reset()
                     ghost.start()
                 }
-/*
-                blinky.reset()
-                blinky.start()
-                pinky.reset()
-                pinky.start()
-                inky.reset()
-                inky.start()
-                clyde.reset()
-                clyde.start()
-*/
+
+//                blinky.reset()
+//                blinky.start()
+//                pinky.reset()
+//                pinky.start()
+//                inky.reset()
+//                inky.start()
+//                clyde.reset()
+//                clyde.start()
+
                 goToNextSequence()
             
             case  1:
@@ -138,25 +138,26 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
                     }
                 }
 
-                // Change blinky state.
+                // Set the chase state after after the time that the player doesn't eat feed.
                 if player.timer_playerNotToEat.isEventFired()  {
                     blinky.chase(playerPosition: player.position)
                     pinky.chase(playerPosition: player.position, playerDirection: player.direction.get())
                     inky.chase(playerPosition: player.position, blinkyPosition: blinky.position)
                     clyde.chase(playerPosition: player.position)
-                } else {
-                    for ghost in allGhosts {
-                        ghost.setStateToScatter()
-                    }
 
                     for ghost in allGhosts {
                         ghost.setStateToGoOut()
+                    }
+
+                } else {
+                    for ghost in allGhosts {
+                        ghost.setStateToScatter()
                     }
                 }
                 
                 // For debug
                 for ghost in allGhosts {
-                    ghost.drawTargetPosition()
+                    ghost.drawTargetPosition(show: true)
                 }
                 break
 
