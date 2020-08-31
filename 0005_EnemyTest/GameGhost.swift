@@ -700,17 +700,21 @@ class CgGhost : CgActor {
     // ============================================================
     func getGhostSpeed(action: EnGhostAction) -> Int {
         var _action: EnGhostAction = action
+        let road = deligateActor.getTileAttribute(to: .Stop, position: position)
 
         switch action {
             case .Walking:
-                let road = deligateActor.getTileAttribute(to: .Stop, position: position)
                 if road == .Slow {
                     _action = .Warping
                 } else if state.isSpurt() {
                     _action = .Spurting
                 }
+            case .Frightened:
+                if road == .Slow {
+                    _action = .Warping
+                }
             default:
-                // Frightened, Standby, GoingOut, Escaping
+                // Standby, GoingOut, Escaping
                 break
         }
         

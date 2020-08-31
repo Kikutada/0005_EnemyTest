@@ -53,7 +53,6 @@ enum EnMazeTile: Int {
 
 /// Protocol  for actors
 protocol ActorDeligate {
-
     func playerEatFeed(column: Int, row: Int, power: Bool)
     func playerEatFruit(column: Int, row: Int)
     func getPlayerSpeed(action: CgPlayer.EnPlayerAction, with power: Bool) -> Int
