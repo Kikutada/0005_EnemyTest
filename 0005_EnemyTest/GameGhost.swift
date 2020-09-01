@@ -256,16 +256,7 @@ class CgGhostClyde : CgGhost {
 class CgGhostState : CbContainer {
 
     enum EnGhostState {
-        case None, Stop, Standby, GoOut, Scatter, Chase, Frightened,
-             Escape, EscapeInNest
-        
-        func isFrightenedState() -> Bool {
-            return self == .Frightened
-        }
-        
-        func isEscapeState() -> Bool {
-            return self == .Escape || self == .EscapeInNest
-        }
+        case None, Stop, Standby, GoOut, Scatter, Chase, Escape, EscapeInNest
     }
 
     private var currentState: EnGhostState = .None
