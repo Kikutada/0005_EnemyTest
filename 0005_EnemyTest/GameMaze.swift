@@ -251,9 +251,10 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
             case .Spurting: speed =  16
             case .Frightened: speed = 10
             case .Warping: speed = 8
+            case .GoingOut: fallthrough
             case .Standby: speed = 8
             case .Escaping: speed = 32
-            default: speed = 16
+            case .None: speed = 16
         }
         return speed
     }

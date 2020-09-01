@@ -36,19 +36,6 @@ class CgGhostBlinky : CgGhost {
         draw()
     }
 
-    /// Start
-    override func start() {
-        super.start()
-        state.set(to: .Scatter)
-    }
-        
-    /// Stop
-    override func stop() {
-        super.stop()
-        direction.set(to: .Stop)
-        draw()
-    }
-
     // ============================================================
     //  General methods in this class
     // ============================================================
@@ -460,8 +447,16 @@ class CgGhost : CgActor {
         movementRestriction = .None
     }
 
+    /// Start
+    override func start() {
+        super.start()
+        draw()
+    }
+    
+    /// Stop
     override func stop() {
-        sprite.stopAnimation(sprite_number)
+        super.stop()
+        draw()
     }
     
     /// Update handler
@@ -557,7 +552,7 @@ class CgGhost : CgActor {
                 break
         }
     }
-
+    
     func entryActionToEscape() {
         target.set(column: 13, row: 21, dx: 4)
         sprite.stopAnimation(sprite_number)
@@ -687,7 +682,6 @@ class CgGhost : CgActor {
         guard !state.isEscape() else { return }
         state.setFrightened(true, interval: time)
         updateDirection(to: direction.get().getReverse())
-        draw()
     }
     
     func setStateToEscape() {
@@ -888,6 +882,7 @@ class CgGhost : CgActor {
             // Stopped ghost
             let texture1 = actor.rawValue*16+direction.get().rawValue*2+64
             sprite.draw(sprite_number, x: position.x, y: position.y, texture: texture1)
+            sprite.stopAnimation(sprite_number)
 
         } else if state.isFrightened() {
             // Frightened ghost
