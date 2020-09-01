@@ -27,7 +27,7 @@ class CgGhostBlinky : CgGhost {
     //  - Sequence: reset()->start()->update() called->stop()
     // ============================================================
 
-    /// Reset ghopst states and draw at default position
+    /// Reset ghost state and draw at default position
     override func reset() {
         super.reset()
         position.set(column: 13, row: 21, dx: 4)
@@ -75,7 +75,7 @@ class CgGhostPinky : CgGhost {
     //  - Sequence: reset()->start()->update() called->stop()
     // ============================================================
 
-    /// Reset ghopst states and draw at default position
+    /// Reset ghost state and draw at default position
     override func reset() {
         super.reset()
         position.set(column: 13, row: 18, dx: 4)
@@ -133,7 +133,7 @@ class CgGhostInky : CgGhost {
     //  - Sequence: reset()->start()->update() called->stop()
     // ============================================================
 
-    /// Reset ghopst states and draw at default position
+    /// Reset ghost state and draw at default position
     override func reset() {
         super.reset()
         position.set(column: 11, row: 18, dx: 4)
@@ -188,7 +188,7 @@ class CgGhostClyde : CgGhost {
     //  - Sequence: reset()->start()->update() called->stop()
     // ============================================================
 
-    /// Reset ghopst states and draw at default position
+    /// Reset ghost state and draw at default position
     override func reset() {
         super.reset()
         chaseMode = false
@@ -430,7 +430,7 @@ class CgGhost : CgActor {
     //  - Sequence: reset()->start()->update() called->stop()
     // ============================================================
 
-    /// Reset player states and draw at default position
+    /// Reset ghost states and draw at default position
     override func reset() {
         super.reset()
         direction.reset()
@@ -496,7 +496,7 @@ class CgGhost : CgActor {
         //  Update direction and sprite animation for changes.
         if state.isChanging() || direction.isChanging() || state.isDrawingUpdated() {
             if direction.isChanging() {
-                position.roundDown(to: .Stop)
+                position.roundDown()
                 direction.update()
             }
             draw()

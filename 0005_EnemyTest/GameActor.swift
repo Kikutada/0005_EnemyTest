@@ -190,7 +190,7 @@ class CgPosition {
         return abs(delta)
     }
 
-    func roundDown(to direction: EnDirection) {
+    func roundDown(to direction: EnDirection = .Stop) {
         switch direction {
             case .Right: dxf = 0
             case .Left:  dxf = 0
