@@ -786,8 +786,10 @@ class CgGhost : CgActor {
         var _speed = speed
         var nextDirection = direction.get()
 
-        // After the ghost changes direction,
-        // move one dot or more and then change the next direction.
+        // REMARK:
+        //   After the ghost changes direction,
+        //   move one dot or more and then change the next direction.
+        //   Without this code, ghost will quickly change directions.
         if position.amountMoved > 0 {
             if targetSelected {
                 nextDirection = decideDirectionByTarget(oneWayProhibition: oneWayProhibition)
