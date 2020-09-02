@@ -82,12 +82,10 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
         pinky  = CgGhostPinky(binding: self, deligateActor: self)
         inky   = CgGhostInky(binding: self, deligateActor: self)
         clyde  = CgGhostClyde(binding: self, deligateActor: self)
-        
         allGhosts.append(blinky)
         allGhosts.append(pinky)
         allGhosts.append(inky)
         allGhosts.append(clyde)
-
     }
 
     /// Handle sequence
@@ -102,10 +100,7 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
                 printPlayers()
 
                 player.reset()
-                for ghost in allGhosts {
-                    ghost.reset()
-                }
-
+                for ghost in allGhosts { ghost.reset() }
                 goToNextSequence()
             
             case 1:
@@ -113,9 +108,7 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
                 drawPowerFeed(state: .Blinking)
 
                 player.start()
-                for ghost in allGhosts {
-                    ghost.start()
-                }
+                for ghost in allGhosts { ghost.start() }
                 goToNextSequence()
             
             case  2:
@@ -139,22 +132,16 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
                     inky.chase(playerPosition: player.position, blinkyPosition: blinky.position)
                     clyde.chase(playerPosition: player.position)
 
-                    for ghost in allGhosts {
-                        ghost.setStateToGoOut()
-                    }
+                    for ghost in allGhosts { ghost.setStateToGoOut() }
 
                 } else {
-                    for ghost in allGhosts {
-                        ghost.setStateToScatter()
-                    }
+                    for ghost in allGhosts { ghost.setStateToScatter() }
                 }
                 
                 // For debug
-                for ghost in allGhosts {
-                    ghost.drawTargetPosition(show: true)
-                }
+                for ghost in allGhosts { ghost.drawTargetPosition(show: true) }
                 break
-
+/*
             //
             //  Round clear animation(Maze flashes)
             //
@@ -174,11 +161,7 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
                     }
                     blinkingTimer -= 1
                 }
-
-            case 12:
-                // Stop and exit running sequence.
-                return false
-
+*/
             default:
                 // Stop and exit running sequence.
                 return false
