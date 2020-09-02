@@ -475,7 +475,7 @@ class CgGhost : CgActor {
         //
         switch state.get() {
             case .Init : break
-            case .Standby: doActionInStanby()
+            case .Standby: doActionInStandby()
             case .GoOut:  doActionInGoOut()
             case .Scatter:
                 if state.isFrightened() {
@@ -557,7 +557,7 @@ class CgGhost : CgActor {
     //  Do action in state.
     // ============================================================
     /// Ghost moves up and down in the nest.
-    func doActionInStanby() {
+    func doActionInStandby() {
         var speed = getGhostSpeed(action: .Standby)
         let currentDirectrion = direction.get()
 
@@ -575,7 +575,7 @@ class CgGhost : CgActor {
     func doActionInGoOut() {
         // Ghost moves only vertically and waits until it is in the middle position.
         if movementRestriction == .OnlyVertical {
-            doActionInStanby()
+            doActionInStandby()
             if position.dy == 0 {
                 movementRestriction = .None
             }
