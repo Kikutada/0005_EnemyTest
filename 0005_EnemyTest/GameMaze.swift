@@ -100,30 +100,25 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
                 drawBackground()
                 let _ = setAndDraw()
                 printPlayers()
-                printBlinking1Up()
-
-                drawPowerFeed(state: .Blinking)
 
                 player.reset()
-                player.start()
-
                 for ghost in allGhosts {
                     ghost.reset()
-                    ghost.start()
                 }
-
-//                blinky.reset()
-//                blinky.start()
-//                pinky.reset()
-//                pinky.start()
-//                inky.reset()
-//                inky.start()
-//                clyde.reset()
-//                clyde.start()
 
                 goToNextSequence()
             
-            case  1:
+            case 1:
+                printBlinking1Up()
+                drawPowerFeed(state: .Blinking)
+
+                player.start()
+                for ghost in allGhosts {
+                    ghost.start()
+                }
+                goToNextSequence()
+            
+            case  2:
                 // ===========
                 // Foever loop
                 // ===========
@@ -190,10 +185,12 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
         }
         
         // Play BGM
-        if player.timer_playerWithPower.isCounting() {
-            sound.playBGM(.BgmPower)
-        } else {
-            sound.playBGM(.BgmNormal)
+        if sequence >= 2 {
+            if player.timer_playerWithPower.isCounting() {
+                sound.playBGM(.BgmPower)
+            } else {
+                sound.playBGM(.BgmNormal)
+            }
         }
         
         // Continue running sequence.

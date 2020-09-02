@@ -100,7 +100,7 @@ class CgGhostPinky : CgGhost {
         super.setStateToChase(targetPosition: newTargetPosition)
     }
     
-    /// Set the direction in stanby state.
+    /// Set the direction in standby state.
     override func entryActionToStandby() {
         updateDirection(to: .Down)
     }
@@ -256,11 +256,11 @@ class CgGhostClyde : CgGhost {
 class CgGhostState : CbContainer {
 
     enum EnGhostState {
-        case None, Stop, Standby, GoOut, Scatter, Chase, Escape, EscapeInNest
+        case Init, Standby, GoOut, Scatter, Chase, Escape, EscapeInNest
     }
 
-    private var currentState: EnGhostState = .None
-    private var nextState: EnGhostState = .None
+    private var currentState: EnGhostState = .Init
+    private var nextState: EnGhostState = .Init
 
     private var frightenedState: Bool = false
     private var frightenedBlinkingState: Bool = false
@@ -309,8 +309,8 @@ class CgGhostState : CbContainer {
     }
 
     func reset() {
-        currentState = .None
-        nextState = .None
+        currentState = .Init
+        nextState = .Init
         frightenedState = false
         frightenedBlinkingState = false
         frightenedBlinkingOn = false
@@ -340,7 +340,7 @@ class CgGhostState : CbContainer {
     }
 
     func isChanging() -> Bool {
-        return ( currentState != nextState && nextState != .None)
+        return currentState != nextState
     }
     
     func setSpurt() {
@@ -459,13 +459,13 @@ class CgGhost : CgActor {
         //
         if state.isChanging() {
             switch state.getNext() {
+                case .Init : break
                 case .Standby: entryActionToStandby()
                 case .GoOut: entryActionToGoOut()
                 case .Scatter: entryActionToScatter()
                 case .Chase: entryActionToChase()
                 case .Escape: entryActionToEscape()
                 case .EscapeInNest: entryActionToEscapeInNest()
-                default: break
             }
             state.update()
         }
@@ -474,6 +474,7 @@ class CgGhost : CgActor {
         // Do Action in state
         //
         switch state.get() {
+            case .Init : break
             case .Standby: doActionInStanby()
             case .GoOut:  doActionInGoOut()
             case .Scatter:
@@ -490,7 +491,6 @@ class CgGhost : CgActor {
                 }
             case .Escape:  doActionInEscape()
             case .EscapeInNest:  doActionInEscapeInNest()
-            default: break
         }
 
         //  Update direction and sprite animation for changes.
@@ -522,7 +522,7 @@ class CgGhost : CgActor {
 
     func entryActionToScatter() {
         switch state.get() {
-            case .None:
+            case .Init:
                 break
             case .Chase:
                 updateDirection(to: direction.get().getReverse())
@@ -652,6 +652,11 @@ class CgGhost : CgActor {
     // ============================================================
     //  Change state methods
     // ============================================================
+    func setStateToStandby() {
+        guard state.get() == .EscapeInNest else { return }
+        state.set(to: .Standby)
+    }
+
     func setStateToGoOut() {
         guard state.get() == .Standby else { return }
         state.set(to: .GoOut)
@@ -912,7 +917,7 @@ class CgGhost : CgActor {
     func drawTargetPosition(show: Bool) {
         let targetActor: EnActor = actor.getTarget()
         let spriteNumber = targetActor.getSpriteNumber()
-        let _state = show ? state.get() : .None
+        let _state = show ? state.get() : .Init
 
         switch _state {
             case .GoOut: fallthrough
