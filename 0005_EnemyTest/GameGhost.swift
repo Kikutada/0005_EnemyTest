@@ -727,7 +727,7 @@ class CgGhost : CgActor {
             
             if (road == .Wall) {
                 can = false
-            } else if oneWayProhibition && (road == .Oneway && direction == .Up) {
+            } else if oneWayProhibition && (road == .Oneway && direction == .Up && position.isCenter()) {
                 can = false
             }
         } else {
@@ -794,6 +794,7 @@ class CgGhost : CgActor {
             }
             direction.set(to: nextDirection)
             if direction.isChanging() {
+                position.roundDown()
                 position.amountMoved = 0
             }
         }

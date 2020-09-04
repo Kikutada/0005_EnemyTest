@@ -118,7 +118,7 @@ class CgSceneMaze: CgSceneFrame, ActorDeligate {
                 
                 // Player checks to collide ghost.
                 for ghost in allGhosts {
-                    if player.DetectCollision(ghostPosition: ghost.position) {
+                    if player.detectCollision(ghostPosition: ghost.position) {
                         if ghost.state.isFrightened()  {
                             ghost.setStateToEscape()
                         }

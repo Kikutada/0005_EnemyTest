@@ -231,7 +231,7 @@ class CgPlayer : CgActor {
     /// Collision detection
     /// - Parameter ghostPosition: Ghost's position
     /// - Returns: If true, ghost and player have collided.
-    func DetectCollision(ghostPosition: CgPosition) -> Bool {
+    func detectCollision(ghostPosition: CgPosition) -> Bool {
         var collision: Bool = false
         if (abs(ghostPosition.x-position.x) < 5) && (abs(ghostPosition.y-position.y) < 5) {
             collision = true
